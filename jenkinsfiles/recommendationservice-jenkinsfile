@@ -12,7 +12,7 @@ pipeline {
         stage('Checkout from Git') {
             steps {
                 git branch: 'master',
-                    url: 'https://github.com/gsharma1298/micro-service.git'
+                    url: 'https://github.com/Umairkhan30/micro-service.git'
             }
         }
 
@@ -55,8 +55,8 @@ pipeline {
         stage('Update Deployment file') {
             environment {
                 GIT_REPO_NAME = "micro-service"
-                GIT_EMAIL = "gsharma1298@gmail.com"
-                GIT_USER_NAME = "gsharma1298"
+                GIT_EMAIL = "ru6419435@gmail.com"
+                GIT_USER_NAME = "Umairkhan30"
                 IMAGE_NAME = "recommendationservice"
                 REPO_URL = "777113033512.dkr.ecr.ap-south-1.amazonaws.com/recommendationservice"
                 YAML_FILE = "recommendationservice.yaml"
@@ -66,7 +66,7 @@ pipeline {
                 dir('kubernetes-files') {
                     withCredentials([
                         string(
-                            credentialsId: 'git-tokan',
+                            credentialsId: 'git-token',
                             variable: 'git_token'
                         )
                     ]) {

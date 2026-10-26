@@ -3,12 +3,12 @@ pipeline {
 
     environment {
         GIT_REPO_NAME = "micro-service"
-        GIT_EMAIL = "gsharma1298@gmail.com"
-        GIT_USER_NAME = "gsharma1298"
+        GIT_EMAIL = "ru6419435@gmail.com"
+        GIT_USER_NAME = "Umairkhan30"
         IMAGE_NAME = "adservice"
         REPO_URL = "777113033512.dkr.ecr.ap-south-1.amazonaws.com/adservice"
         YAML_FILE = "adservice.yaml"
-        GIT_TOKAN = credentials('git-tokan')
+        GIT_TOKAN = credentials('git-token')
     }
 
     stages {
@@ -20,7 +20,7 @@ pipeline {
 
         stage('Checkout from Git') {
             steps {
-                git branch: 'master', url: 'https://github.com/gsharma1298/micro-service.git'
+                git branch: 'master', url: 'https://github.com/Umairkhan30/micro-service.git'
             }
         }
 
@@ -51,7 +51,7 @@ pipeline {
     stage('Update Deployment file') {
             steps {
                 dir('kubernetes-files') {
-                    withCredentials([string(credentialsId: 'git-tokan', variable: 'git_token')]) {
+                    withCredentials([string(credentialsId: 'git-token', variable: 'git_token')]) {
                         sh '''
                             git config user.email "${GIT_EMAIL}"
                             git config user.name "${GIT_USER_NAME}"

@@ -1,4 +1,4 @@
-def repoUrl = "https://github.com/gsharma1298/micro-service.git"
+def repoUrl = "https://github.com/Umairkhan30/micro-service.git"
 
 def pipelineFiles = [
     "adservice-jenkinsfile",

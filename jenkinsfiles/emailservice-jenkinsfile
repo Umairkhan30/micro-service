@@ -57,7 +57,7 @@ pipeline {
 
             steps {
                 withCredentials([
-                    string(credentialsId: 'git-tokan', variable: 'git_token')
+                    string(credentialsId: 'git-token', variable: 'git_token')
                 ]) {
                     sh '''
                         set -eu

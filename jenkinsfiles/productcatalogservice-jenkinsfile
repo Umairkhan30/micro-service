@@ -28,7 +28,7 @@ pipeline {
                 script {
                     sh '''
                     #Retrieve an authentication token and authenticate your Docker client to your registry. Use the AWS CLI:
-                aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 777113033512.dkr.ecr.ap-south-1.amazonaws.com
+                    aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 777113033512.dkr.ecr.ap-south-1.amazonaws.com
 
                     #After the build completes, tag your image so you can push the image to this repository:
                    docker tag productcatalogservice:latest 777113033512.dkr.ecr.ap-south-1.amazonaws.com/productcatalogservice:${BUILD_NUMBER}
@@ -61,6 +61,10 @@ pipeline {
                             sed -i "s#image:.*#image: ${REPO_URL}:$BUILD_NUMBER#g" ${YAML_FILE}
                             git add .
                             git commit -m "Update ${IMAGE_NAME} Image to version \${BUILD_NUMBER}"
+                            git remote set-url origin \
+                            "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git"
+                            git fetch origin master
+                            git rebase origin/master
                             git push https://${git_token}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
         
                         '''

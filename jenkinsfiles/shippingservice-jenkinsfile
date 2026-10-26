@@ -9,7 +9,7 @@ pipeline {
         }
         stage('Checkout from Git') {
             steps {
-                git branch: 'master', url: 'https://github.com/gsharma1298/micro-service.git'
+                git branch: 'master', url: 'https://github.com/Umairkhan30/micro-service.git'
             }
         }
         stage("Docker Image Build") {
@@ -28,7 +28,7 @@ pipeline {
                 script {
                     sh '''
                     #Retrieve an authentication token and authenticate your Docker client to your registry. Use the AWS CLI:
-aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 777113033512.dkr.ecr.ap-south-1.amazonaws.com
+                    aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 777113033512.dkr.ecr.ap-south-1.amazonaws.com
 
                     #After the build completes, tag your image so you can push the image to this repository:
                     docker tag shippingservice:latest 777113033512.dkr.ecr.ap-south-1.amazonaws.com/shippingservice:${BUILD_NUMBER}
@@ -42,15 +42,15 @@ aws ecr get-login-password --region ap-south-1 | docker login --username AWS --p
         stage('Update Deployment file') {
             environment {
                 GIT_REPO_NAME = "micro-service"
-                GIT_EMAIL = "gsharma1298@gmail.com"
-                GIT_USER_NAME = "gsharma1298"
+                GIT_EMAIL = "ru6419435@gmail.com"
+                GIT_USER_NAME = "Umairkhan30"
                 IMAGE_NAME = "shippingservice"
                 REPO_URL = "777113033512.dkr.ecr.ap-south-1.amazonaws.com/shippingservice"
                 YAML_FILE = "shippingservice.yaml"
             }
             steps {
                 dir('kubernetes-files') {
-                    withCredentials([string(credentialsId: 'git-tokan', variable: 'git_token')]) {
+                    withCredentials([string(credentialsId: 'git-token', variable: 'git_token')]) {
                         sh '''
                             git config user.email "${GIT_EMAIL}"
                             git config user.name "${GIT_USER_NAME}"

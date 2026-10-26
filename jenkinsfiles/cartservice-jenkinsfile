@@ -1,5 +1,6 @@
+```groovy
 pipeline {
-    agent any 
+    agent any
 
     stages {
         stage('Cleaning Workspace') {
@@ -7,62 +8,90 @@ pipeline {
                 cleanWs()
             }
         }
+
         stage('Checkout from Git') {
             steps {
-                git branch: 'master', url: 'https://github.com/Umairkhan30/micro-service.git'
+                git branch: 'master',
+                    url: 'https://github.com/Umairkhan30/micro-service.git'
             }
         }
-        stage("Docker Image Build") {
+
+        stage('Docker Image Build') {
             steps {
-                script {
-                    dir('src/cartservice/src') {
-                        sh 'docker system prune -f'
-                        sh 'docker container prune -f'
-                        sh 'docker build -t cartservice .'
-                    }
+                dir('src/cartservice/src') {
+                    sh 'docker system prune -f'
+                    sh 'docker container prune -f'
+                    sh 'docker build -t cartservice:latest .'
                 }
             }
         }
-        stage("ECR Image Pushing") {
+
+        stage('ECR Image Pushing') {
+            environment {
+                REPO_URL = '777113033512.dkr.ecr.ap-south-1.amazonaws.com/cartservice'
+            }
             steps {
-                script {
-                    sh '''
-                    #Retrieve an authentication token and authenticate your Docker client to your registry. Use the AWS CLI:
-                    aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 777113033512.dkr.ecr.ap-south-1.amazonaws.com
+                sh '''
+                    set -eu
 
-                    #After the build completes, tag your image so you can push the image to this repository:
-                    docker tag cartservice:latest 777113033512.dkr.ecr.ap-south-1.amazonaws.com/cartservice:2
+                    aws ecr get-login-password --region ap-south-1 |
+                    docker login --username AWS --password-stdin 777113033512.dkr.ecr.ap-south-1.amazonaws.com
 
-                    #Run the following command to push this image to your newly created AWS repository:
-                   docker push 777113033512.dkr.ecr.ap-south-1.amazonaws.com/cartservice:${BUILD_NUMBER}
-                    '''
-                }
+                    docker tag cartservice:latest ${REPO_URL}:${BUILD_NUMBER}
+                    docker push ${REPO_URL}:${BUILD_NUMBER}
+                '''
             }
         }
+
         stage('Update Deployment file') {
             environment {
-                GIT_REPO_NAME = "micro-service"
-                GIT_EMAIL = "gsharma1298@gmail.com"
-                GIT_USER_NAME = "gsharma1298"
-                IMAGE_NAME = "cartservice"
-                REPO_URL = "777113033512.dkr.ecr.ap-south-1.amazonaws.com/cartservice"
-                YAML_FILE = "cartservice.yaml"
+                GIT_REPO_NAME = 'micro-service'
+                GIT_EMAIL = 'gsharma1298@gmail.com'
+                GIT_USER_NAME = 'Umairkhan30'
+                IMAGE_NAME = 'cartservice'
+                REPO_URL = '777113033512.dkr.ecr.ap-south-1.amazonaws.com/cartservice'
+                YAML_FILE = 'cartservice.yaml'
             }
+
             steps {
                 dir('kubernetes-files') {
-                    withCredentials([string(credentialsId: 'git-tokan', variable: 'git_token')]) {
+                    withCredentials([
+                        string(credentialsId: 'git-token', variable: 'git_token')
+                    ]) {
                         sh '''
+                            set -eu
+
                             git config user.email "${GIT_EMAIL}"
                             git config user.name "${GIT_USER_NAME}"
-                            BUILD_NUMBER=${BUILD_NUMBER}
-                            echo $BUILD_NUMBER
 
-                            # push this image to your git hub
-                            sed -i "s#image:.*#image: ${REPO_URL}:$BUILD_NUMBER#g" ${YAML_FILE}
-                            git add .
-                            git commit -m "Update ${IMAGE_NAME} Image to version \${BUILD_NUMBER}"
-                            git push https://${git_token}@github.com/${GIT_USER_NAME}/${GIT_REPO_NAME} HEAD:master
-        
+                            sed -i "s#image:.*#image: ${REPO_URL}:${BUILD_NUMBER}#" "${YAML_FILE}"
+
+                            git add "${YAML_FILE}"
+
+                            if git diff --cached --quiet; then
+                                echo "No deployment file changes to commit."
+                                exit 0
+                            fi
+
+                            git commit -m "Update ${IMAGE_NAME} image to version ${BUILD_NUMBER}"
+
+                            cat > "$WORKSPACE/.git-askpass.sh" <<'ASKPASS'
+#!/bin/sh
+case "$1" in
+    *Username*) printf '%s\\n' "$GIT_USER_NAME" ;;
+    *Password*) printf '%s\\n' "$git_token" ;;
+    *) exit 1 ;;
+esac
+ASKPASS
+
+                            chmod 700 "$WORKSPACE/.git-askpass.sh"
+                            trap 'rm -f "$WORKSPACE/.git-askpass.sh"' EXIT
+
+                            GIT_TERMINAL_PROMPT=0 \
+                            GIT_ASKPASS="$WORKSPACE/.git-askpass.sh" \
+                            git -c credential.helper= push \
+                                "https://github.com/${GIT_USER_NAME}/${GIT_REPO_NAME}.git" \
+                                HEAD:master
                         '''
                     }
                 }
@@ -70,3 +99,4 @@ pipeline {
         }
     }
 }
+```
